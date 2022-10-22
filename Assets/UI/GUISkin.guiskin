@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 12001, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: GUISkin
   m_EditorClassIdentifier: 
-  m_Font: {fileID: 12800000, guid: 0f908c82b9af32947bb6eaf4ba7f2bfc, type: 3}
+  m_Font: {fileID: 12800000, guid: 478d654ba6853a14fa95338c0c4112a2, type: 3}
   m_box:
     m_Name: box
     m_Normal:
@@ -284,7 +284,7 @@ MonoBehaviour:
   m_textField:
     m_Name: textfield
     m_Normal:
-      m_Background: {fileID: 2800000, guid: c9c0fc3f8f5dfc64298c81a4f447c340, type: 3}
+      m_Background: {fileID: 2800000, guid: 06c781d1cbb65214d95b1d37f13fac73, type: 3}
       m_ScaledBackgrounds: []
       m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
