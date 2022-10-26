@@ -23,12 +23,19 @@ public class SharkMovement : MonoBehaviour
         //If duck still exists we can move
         if (_duck != null)
         {
-            //Store the direction to our target duck by taking away our shark position from its position
-            _moveDir = _duck.transform.position - transform.position;
-            //Normalize the direction so the max distance is 1. This allows us to apply our speed correctly
-            _moveDir.Normalize();
-            //Move our shark towards duck according to speed set in GameHandler
-            transform.position += _moveDir * _gameHandler.sharkSpeed * Time.deltaTime;
+            if (transform.position.x < -8f)
+            {
+                //Store the direction to our target duck by taking away our shark position from its position
+                _moveDir = _duck.transform.position - transform.position;
+                //Normalize the direction so the max distance is 1. This allows us to apply our speed correctly
+                _moveDir.Normalize();
+                //Move our shark towards duck according to speed set in GameHandler
+                transform.position += _moveDir * _gameHandler.sharkSpeed * Time.deltaTime;
+            }
+            else
+            {
+                transform.position -= new Vector3(_gameHandler.sharkSpeed * Time.deltaTime, 0f, 0f);
+            }
         }
     }
     private void OnCollisionEnter(Collision collision)

@@ -4,7 +4,6 @@ using UnityEngine; //Use UnityEngine to connect to Unity
 using UnityEngine.UI; //Use UnityEngine.UI to allow us to control our UI/Canvas elements
 using System.IO; //Use System.IO to allow us to save and retrieve our high scores in CSV file
 
-[System.Serializable]
 public class GameHandler : MonoBehaviour
 {
     #region Variables
@@ -17,8 +16,8 @@ public class GameHandler : MonoBehaviour
     //Create a public list to store the sharks we have in scene so BulletHandler class can compare it with bullet list for challenge mode but hide it in Inspector
     [HideInInspector] public List<GameObject> sharksInScene = new List<GameObject>();
     [Header("Game Variables")]
-    [Tooltip("Set the starting speed of the sharks")]
-    public float sharkSpeed = 3f;
+    [Tooltip("Set the starting speed of the sharks. Changes at start of new game so this value isn't important")]
+    public float sharkSpeed;
     [Tooltip("Bool check to see if user selected Challenge Mode. Will be set by menu buttons")]
     public bool challengeMode = false;
     [Header("Object References")]
@@ -31,8 +30,8 @@ public class GameHandler : MonoBehaviour
     [Header("UI Elements")]
     [Tooltip("Add the ContinueButton from the Canvas object here")]
     public Button continueButton;
-    [Tooltip("Add the InputField from the SaveScoreMenu here")]
-    public InputField highScoreInput;
+    [Tooltip("Add the Text Field from the SaveScoreMenu here")]
+    public Text highScoreInput;
     [Tooltip("Add the Canvas object here")]
     public GameObject menuCanvas;
     [Tooltip("Add the SaveScoreMenu object here")]
@@ -46,9 +45,19 @@ public class GameHandler : MonoBehaviour
     [Header("UI Style")]
     [Tooltip("Add the skin to use to style the imGUI elements")]
     public GUISkin skin;
+    [Header("Audio")]
+    [Tooltip("Add the Music audio source here")]
+    [SerializeField] private AudioSource _audio;
     public static string path = Path.Combine(Application.streamingAssetsPath, "HighScores.txt");
     #endregion
     #region Game States
+    private void Start()
+    {
+        //Stop audio on start
+        _audio.Stop();
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
     private void Update()
     {
         //If either of the menus that can be accessed on application load are active set time scale to 0 so sharks won't start functioning before User enters new game, otherwise set it to 1
@@ -61,9 +70,9 @@ public class GameHandler : MonoBehaviour
             Time.timeScale = 1;
         }
         //If time scale is 1, we can activate the pause function using the escape or P1 Start buttons
-        if (Time.timeScale == 1)
+        if (!saveScoreMenu.activeInHierarchy && !menuCanvas.activeInHierarchy)
         {
-            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Any Start"))
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("P1 R1"))
             {
                 Pause();
             }
@@ -80,7 +89,9 @@ public class GameHandler : MonoBehaviour
         //Reset score to 0
         score = 0;
         //Reset shark speed to default starting speed
-        sharkSpeed = 3f;
+        sharkSpeed = 4f;
+        //Start audio on new game start
+        _audio.Play();
         //If there is no duck in scene Instantiate one at the left side of screen and set its name to Duck so next check will find it
         if (!GameObject.Find("Duck"))
         {
@@ -108,8 +119,9 @@ public class GameHandler : MonoBehaviour
         if (Time.timeScale == 1)
         {
             Time.timeScale = 0;
-            Cursor.visible = true;
             menuCanvas.SetActive(true);
+            //Stop music on pause
+            _audio.Stop();
         }
         //Else hide the cursor and restart time scale
         else
@@ -125,9 +137,10 @@ public class GameHandler : MonoBehaviour
         {
             //Stop time scale and show the cursor
             Time.timeScale = 0;
-            Cursor.visible = true;
             //Deactivate continue button as we no longer have a game to continue on with
             continueButton.interactable = false;
+            //Disable challenge mode check so onGUI elements don't display weirdly on SaveHighScore menu
+            challengeMode = false;
             //Show the SaveScoreMenu
             saveScoreMenu.SetActive(true);
         }
@@ -138,6 +151,8 @@ public class GameHandler : MonoBehaviour
             //Ativate the pause function to show menu and cursor and stop time scale
             Pause();
         }
+        //Stop audio on game end
+        _audio.Stop();
     }
     public void Exit()
     {
@@ -150,7 +165,7 @@ public class GameHandler : MonoBehaviour
     }
     #endregion
     #region High Scores
-    public void WriteHighScores(InputField name)
+    public void WriteHighScores(Text name)
     {
         int i = 0;
         foreach (int saved in _highScores)
@@ -239,7 +254,7 @@ public class GameHandler : MonoBehaviour
             //If time is not stopped Instantiate a shark at a random Y position on the right side of screen
             if (Time.timeScale == 1)
             {
-                sharksInScene.Add(Instantiate(sharkPrefab, new Vector3(11.7f, Random.Range(-6f, 6f), 2f), Quaternion.Euler(0, 90, 0)));
+                sharksInScene.Add(Instantiate(sharkPrefab, new Vector3(13.5f, Random.Range(-6f, 6f), 2f), Quaternion.Euler(0, 90, 0)));
             }
             //Wait o.75 of a second before the next pass through loop
             yield return new WaitForSecondsRealtime(0.75f);
@@ -252,11 +267,11 @@ public class GameHandler : MonoBehaviour
         //If Challenge mode we will wait for 10 seconds before increasing speed, otherwise we wait 5 seconds
         if (challengeMode)
         {
-            yield return new WaitForSecondsRealtime(10f);
+            yield return new WaitForSecondsRealtime(5f);
         }
         else
         {
-            yield return new WaitForSecondsRealtime(5f);
+            yield return new WaitForSecondsRealtime(2.5f);
         }
         //If time is not stopped increase speed by 0.5
         if (Time.timeScale == 1)
@@ -273,20 +288,38 @@ public class GameHandler : MonoBehaviour
     #region UI
     public void HighScoreInput(string letter)
     {
-        //If user presses a letter on the onscreen keyboard add its value to the text of the input field
-        highScoreInput.text = highScoreInput.text + letter;
+        if (highScoreInput.text.Length < 21)
+        {
+            Debug.Log(letter.Length);
+            //If user presses a letter on the onscreen keyboard add its value to the text of the input field
+            highScoreInput.text = highScoreInput.text + letter;
+        }
     }
     private void OnGUI()
     {
         //Apply our skin so imGUI elements are displayed correctly
         GUI.skin = skin;
         //If time is still running we will display imGUI, but it will not show while time is stopped during menus
-        if (Time.timeScale == 1)
+        if (Time.timeScale == 1 && challengeMode == false)
         {
             //Create a text field for current score
             GUI.TextField(new Rect(0, (Screen.height / 18) * 17, Screen.width / 5, Screen.height / 18), "Score: " + score.ToString());
             //Create a text field for the name of the game
             GUI.TextField(new Rect(Screen.width / 5, Screen.height / 18 * 17, (Screen.width / 5) * 3, Screen.height / 18), "Shark Attack 2: Revenge Of The Ducks");
+            //Create a text field for the current shark speed
+            GUI.TextField(new Rect((Screen.width / 5) * 4, Screen.height / 18 * 17, Screen.width / 5, Screen.height / 18), "Shark Speed: " + sharkSpeed.ToString());
+        }
+        else if (Time.timeScale == 1 && challengeMode == true)
+        {
+            //Create a text field for current score
+            GUI.TextField(new Rect(0, (Screen.height / 18) * 17, Screen.width / 5, Screen.height / 18), "Score: " + score.ToString());
+            //Create a text field for the name of the game
+            GUI.TextField(new Rect(Screen.width / 5, Screen.height / 18 * 17, (Screen.width / 5) * 2, Screen.height / 18), "Shark Attack 2: Challenge");
+            if (duck != null)
+            { 
+                //Create a text field for the number of bullets left
+                GUI.TextField(new Rect((Screen.width / 5) * 3, Screen.height / 18 * 17, (Screen.width / 5) * 1, Screen.height / 18), "Bullets: " + ((2 * sharksInScene.Count) - duck.GetComponent<DuckMovement>().bulletsInScene.Count)).ToString();
+            }
             //Create a text field for the current shark speed
             GUI.TextField(new Rect((Screen.width / 5) * 4, Screen.height / 18 * 17, Screen.width / 5, Screen.height / 18), "Shark Speed: " + sharkSpeed.ToString());
         }

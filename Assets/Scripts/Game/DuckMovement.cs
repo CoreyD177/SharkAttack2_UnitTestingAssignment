@@ -1,5 +1,5 @@
-using UnityEngine; //Use UnityEngine to connect to Unity
 using System.Collections.Generic; //Use System.Collections.Generic to allow use of Lists
+using UnityEngine; //Use UnityEngine to connect to Unity
 
 public class DuckMovement : MonoBehaviour
 {
@@ -7,7 +7,7 @@ public class DuckMovement : MonoBehaviour
     //Create a variable for our move direction
     private Vector3 _moveDir;
     //Set speed of duck movement to 5
-    private float _speed = 5f;
+    private float _speed = 8f;
     //Create a variable for a CharacterController reference
     private CharacterController _charController;
     //Create a variable for a GameHandler reference
@@ -28,13 +28,20 @@ public class DuckMovement : MonoBehaviour
     }
     void Update()
     {
-        //Use player input to create a movement direction. P1 Verti is a custom axis for use in Arcade machine
-        _moveDir = new Vector3(0, Input.GetAxis("P1 Verti"), 0);
-        //Multiply our movement direction by our soeed
-        _moveDir *= _speed;
-        //Use MoveDuck function to move duck according to our _moveDir
-        MoveDuck(_moveDir);
-        //If we get input from one of the acceptable buttons. We will use space for PC, and P1 Blue buttons for Arcade Machine
+        if (Time.timeScale == 1)
+        {
+            //Use player input to create a movement direction. P1 Verti is a custom axis for use in Arcade machine
+            _moveDir = new Vector3(0, Input.GetAxis("P1 Verti"), 0);
+            //Multiply our movement direction by our soeed
+            _moveDir *= _speed;
+            //Use MoveDuck function to move duck according to our _moveDir
+            MoveDuck(_moveDir);
+            //If we get input from one of the acceptable buttons. We will use space for PC, and P1 Blue buttons for Arcade Machine
+            
+        }
+    }
+    private void LateUpdate()
+    {
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("P1 B1") || Input.GetButtonDown("P1 B2") || Input.GetButtonDown("P1 B3"))
         {
             //If we are using Challenge Mode
